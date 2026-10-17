@@ -401,8 +401,27 @@
             </p>
           </div>
           <span class="px-3 py-1 bg-slate-900 border border-slate-800 text-brand-400 font-mono text-xs rounded-lg">
-            Model: gemini-3-flash-preview
+            Model: gemini-2.5-flash
           </span>
+        </div>
+
+        <!-- API Key Input for Standalone Browsers -->
+        <div class="p-4 bg-slate-900/90 rounded-xl border border-brand-500/30 space-y-2">
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-semibold text-brand-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-key"></i> Gemini API Key (Required for Standalone Browsers)
+            </label>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] text-sky-400 hover:underline flex items-center gap-1">
+              Get Free Key <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+            </a>
+          </div>
+          <div class="flex gap-2">
+            <input type="password" id="user-gemini-key" placeholder="AIzaSy..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-brand-500">
+            <button onclick="saveApiKey()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition-all">
+              Save Key
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-500">Key is saved in browser localStorage and never leaves your device.</p>
         </div>
 
         <!-- Custom Prompt Builder Panel -->
@@ -683,7 +702,6 @@
     let selectedCategory = 'All';
     let currentModalEvent = null;
 
-    // Default Events Dataset (Pre-loaded with accurate North Texas venues)
     let eventsData = [
       {
         id: 'ntx-101',
@@ -799,7 +817,7 @@
       keywords: 'Live Music, Patio, Festivals'
     };
 
-    // ================= INITIALIZATION =================
+    // ================= INITIALIZATION & NAVIGATION =================
     window.onload = function() {
       renderCategoryPills();
       renderEventsGrid(eventsData);
@@ -808,35 +826,44 @@
       updatePermissionUI();
       updateGeminiPromptPreview();
       
+      // Load saved API Key if exists
+      const savedKey = localStorage.getItem('ntx_gemini_key');
+      if (savedKey) {
+        document.getElementById('user-gemini-key').value = savedKey;
+      }
+
       // Initial notification permission check
-      if (Notification.permission === 'granted') {
+      if ('Notification' in window && Notification.permission === 'granted') {
         updatePermissionStatus('granted');
       }
     };
 
-    // ================= TAB SWITCHING =================
     function switchTab(tabId) {
       activeTab = tabId;
-      document.querySelectorAll('.tab-page').forEach(page => page.classList.add('hidden'));
-      document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
 
-      // Update Header Tab Styles
+      // Hide all pages
+      document.querySelectorAll('.tab-page').forEach(page => page.classList.add('hidden'));
+      const activeContent = document.getElementById(`tab-content-${tabId}`);
+      if (activeContent) activeContent.classList.remove('hidden');
+
+      // Update Desktop Buttons
       document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('bg-brand-500/10', 'text-brand-400', 'border-brand-500/30', 'text-slate-400');
-        btn.classList.add('text-slate-400');
+        btn.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+        btn.classList.add('text-slate-400', 'hover:text-slate-200');
       });
-      
-      const activeBtn = document.getElementById(`tab-btn-${tabId}`);
-      if (activeBtn) {
-        activeBtn.classList.remove('text-slate-400');
-        activeBtn.classList.add('bg-brand-500/10', 'text-brand-400', 'border-brand-500/30');
+
+      const activeDesktopBtn = document.getElementById(`tab-btn-${tabId}`);
+      if (activeDesktopBtn) {
+        activeDesktopBtn.classList.remove('text-slate-400', 'hover:text-slate-200');
+        activeDesktopBtn.classList.add('bg-brand-600', 'text-white', 'shadow-md');
       }
 
-      // Update Mobile Nav
+      // Update Mobile Navigation Buttons
       document.querySelectorAll('.mob-btn').forEach(btn => {
         btn.classList.remove('text-brand-400');
         btn.classList.add('text-slate-400');
       });
+
       const activeMobBtn = document.getElementById(`mob-btn-${tabId}`);
       if (activeMobBtn) {
         activeMobBtn.classList.remove('text-slate-400');
@@ -844,82 +871,60 @@
       }
     }
 
-    // ================= EVENT FEED LOGIC =================
+    // ================= EVENT FEED & RENDERING LOGIC =================
     function renderCategoryPills() {
       const container = document.getElementById('category-pills');
-      container.innerHTML = CATEGORIES.map(cat => `
-        <button onclick="setCategoryFilter('${cat}')" class="px-3.5 py-1.5 rounded-xl font-medium transition-all whitespace-nowrap ${
-          selectedCategory === cat 
-            ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' 
-            : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
-        }">
-          ${cat}
-        </button>
-      `).join('');
+      if (!container) return;
+
+      container.innerHTML = CATEGORIES.map(cat => {
+        const isActive = selectedCategory === cat;
+        const activeClasses = isActive 
+          ? 'bg-brand-600 text-white shadow-sm' 
+          : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200';
+        return `
+          <button onclick="selectCategory('${cat}')" class="px-3 py-1.5 rounded-xl font-medium transition-all whitespace-nowrap ${activeClasses}">
+            ${cat}
+          </button>
+        `;
+      }).join('');
     }
 
-    function setCategoryFilter(cat) {
+    function selectCategory(cat) {
       selectedCategory = cat;
       renderCategoryPills();
       applyFilters();
     }
 
-    function applyFilters() {
-      const searchVal = document.getElementById('filter-search').value.toLowerCase();
-      const cityVal = document.getElementById('filter-city').value;
-      const dateVal = document.getElementById('filter-date').value;
-
-      const filtered = eventsData.filter(evt => {
-        const matchesSearch = evt.title.toLowerCase().includes(searchVal) ||
-                              evt.venue.toLowerCase().includes(searchVal) ||
-                              evt.summary.toLowerCase().includes(searchVal);
-        const matchesCity = cityVal === 'ALL' || evt.city === cityVal;
-        const matchesCat = selectedCategory === 'All' || evt.category === selectedCategory;
-        const matchesDate = dateVal === 'ALL' || evt.rawDate === dateVal;
-
-        return matchesSearch && matchesCity && matchesCat && matchesDate;
-      });
-
-      renderEventsGrid(filtered);
-    }
-
-    function resetFilters() {
-      document.getElementById('filter-search').value = '';
-      document.getElementById('filter-city').value = 'ALL';
-      document.getElementById('filter-date').value = 'ALL';
-      selectedCategory = 'All';
-      renderCategoryPills();
-      renderEventsGrid(eventsData);
-    }
-
     function renderEventsGrid(items) {
       const grid = document.getElementById('events-grid');
       const emptyState = document.getElementById('empty-events');
-      const badge = document.getElementById('event-count-badge');
+      const countBadge = document.getElementById('event-count-badge');
 
-      badge.textContent = `${items.length} Event${items.length === 1 ? '' : 's'}`;
+      if (!grid) return;
+
+      if (countBadge) countBadge.textContent = `${items.length} Event${items.length === 1 ? '' : 's'}`;
 
       if (items.length === 0) {
         grid.innerHTML = '';
-        emptyState.classList.remove('hidden');
+        if (emptyState) emptyState.classList.remove('hidden');
         return;
       }
 
-      emptyState.classList.add('hidden');
+      if (emptyState) emptyState.classList.add('hidden');
+
       grid.innerHTML = items.map(evt => `
-        <div class="glass-card glass-card-hover p-5 rounded-2xl flex flex-col justify-between space-y-4 border border-slate-800">
-          
+        <div class="glass-card glass-card-hover rounded-2xl p-5 border border-slate-800 flex flex-col justify-between space-y-4">
           <div class="space-y-2">
-            <div class="flex justify-between items-start gap-2">
-              <span class="px-2.5 py-1 text-[11px] font-bold rounded-lg ${getCategoryStyle(evt.category)}">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">
                 ${evt.category}
               </span>
-              <span class="px-2 py-0.5 text-[10px] font-medium bg-slate-800 text-slate-300 rounded border border-slate-700">
-                <i class="fa-solid fa-location-dot text-brand-400 mr-1"></i>${evt.city}
+              <span class="text-xs text-slate-400 flex items-center gap-1">
+                <i class="fa-solid fa-location-dot text-brand-500 text-[10px]"></i> ${evt.city}
               </span>
             </div>
 
-            <h3 class="font-bold text-white text-base leading-snug hover:text-brand-400 transition-colors cursor-pointer" onclick="openModal('${evt.id}')">
+            <h3 class="font-bold text-white text-base leading-snug hover:text-brand-400 cursor-pointer transition-colors" onclick="openModal('${evt.id}')">
               ${evt.title}
             </h3>
 
@@ -928,57 +933,76 @@
             </p>
           </div>
 
-          <div class="space-y-3 pt-3 border-t border-slate-800/80 text-xs text-slate-300">
-            <div class="flex items-center justify-between text-[11px]">
-              <span class="text-slate-400 flex items-center gap-1">
-                <i class="fa-regular fa-clock text-brand-400"></i> ${evt.date}
-              </span>
-              <span class="font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-                ${evt.price}
-              </span>
+          <div class="space-y-3 pt-3 border-t border-slate-800/80">
+            <div class="flex items-center justify-between text-xs text-slate-300">
+              <span class="flex items-center gap-1.5"><i class="fa-regular fa-clock text-slate-400"></i> ${evt.date}</span>
+              <span class="font-semibold text-brand-400">${evt.price}</span>
             </div>
 
-            <div class="text-[11px] text-slate-400 truncate">
-              <i class="fa-solid fa-building text-slate-500 mr-1"></i> ${evt.venue}
-            </div>
-
-            <div class="flex items-center gap-2 pt-1">
-              <button onclick="openModal('${evt.id}')" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition-all flex items-center justify-center gap-1">
-                Details
+            <div class="flex items-center gap-2">
+              <button onclick="openModal('${evt.id}')" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-circle-info text-xs"></i> View Details
               </button>
-              <button onclick="quickPushEventAlert('${evt.id}')" class="p-2 bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/30 rounded-xl transition-all" title="Push Reminder Alert">
+              <button onclick="quickPushEventAlert('${evt.id}')" title="Set Push Alert" class="p-2 bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/30 rounded-xl transition-all">
                 <i class="fa-solid fa-bell text-xs"></i>
               </button>
             </div>
           </div>
-
         </div>
       `).join('');
     }
 
-    function getCategoryStyle(cat) {
-      switch(cat) {
-        case 'Festivals': return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
-        case 'Music': return 'bg-sky-500/20 text-sky-400 border border-sky-500/30';
-        case 'Food & Drink': return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-        case 'Arts & Culture': return 'bg-purple-500/20 text-purple-400 border border-purple-500/30';
-        case 'Sports': return 'bg-pink-500/20 text-pink-400 border border-pink-500/30';
-        default: return 'bg-slate-800 text-slate-300 border border-slate-700';
-      }
+    function applyFilters() {
+      const searchVal = (document.getElementById('filter-search')?.value || '').toLowerCase();
+      const cityVal = document.getElementById('filter-city')?.value || 'ALL';
+      const dateVal = document.getElementById('filter-date')?.value || 'ALL';
+
+      const filtered = eventsData.filter(evt => {
+        const matchesCategory = selectedCategory === 'All' || evt.category === selectedCategory;
+        const matchesCity = cityVal === 'ALL' || evt.city.toLowerCase() === cityVal.toLowerCase();
+        const matchesSearch = !searchVal || 
+          evt.title.toLowerCase().includes(searchVal) || 
+          evt.venue.toLowerCase().includes(searchVal) || 
+          evt.summary.toLowerCase().includes(searchVal) ||
+          evt.city.toLowerCase().includes(searchVal);
+        const matchesDate = dateVal === 'ALL' || evt.rawDate === dateVal;
+
+        return matchesCategory && matchesCity && matchesSearch && matchesDate;
+      });
+
+      renderEventsGrid(filtered);
     }
 
-    // ================= MAP VIEW LOGIC =================
-    function filterByCityFromMap(cityName) {
-      document.getElementById('filter-city').value = cityName;
-      switchTab('feed');
+    function resetFilters() {
+      const searchInput = document.getElementById('filter-search');
+      const citySelect = document.getElementById('filter-city');
+      const dateSelect = document.getElementById('filter-date');
+
+      if (searchInput) searchInput.value = '';
+      if (citySelect) citySelect.value = 'ALL';
+      if (dateSelect) dateSelect.value = 'ALL';
+
+      selectedCategory = 'All';
+      renderCategoryPills();
       applyFilters();
-      showToast(`Filtered feed for ${cityName === 'ALL' ? 'All North Texas Cities' : cityName}`, 'info');
+      showToast('Filters reset to default view', 'info');
+    }
+
+    function filterByCityFromMap(cityName) {
+      switchTab('feed');
+      const citySelect = document.getElementById('filter-city');
+      if (citySelect) {
+        citySelect.value = cityName;
+        applyFilters();
+        showToast(`Filtered feed for ${cityName === 'ALL' ? 'All Cities' : cityName}`, 'info');
+      }
     }
 
     function updateCityDensity() {
       const container = document.getElementById('city-density-list');
+      if (!container) return;
+
       const cityCounts = {};
-      
       CITIES.forEach(c => cityCounts[c] = 0);
       eventsData.forEach(evt => {
         if (cityCounts[evt.city] !== undefined) cityCounts[evt.city]++;
@@ -986,7 +1010,7 @@
 
       container.innerHTML = CITIES.map(city => {
         const count = cityCounts[city] || 0;
-        const percentage = Math.min((count / eventsData.length) * 100, 100);
+        const percentage = Math.min((count / Math.max(eventsData.length, 1)) * 100, 100);
         return `
           <div onclick="filterByCityFromMap('${city}')" class="group cursor-pointer p-2.5 rounded-xl hover:bg-slate-900 transition-all border border-transparent hover:border-slate-800">
             <div class="flex justify-between items-center text-xs mb-1">
@@ -1001,22 +1025,35 @@
       }).join('');
     }
 
-    // ================= GEMINI LIVE SEARCH INTEGRATION =================
-    function updateGeminiPromptPreview() {
-      const city = document.getElementById('gemini-query-city').value;
-      const category = document.getElementById('gemini-query-category').value;
-      const timeframe = document.getElementById('gemini-query-timeframe').value;
-
-      const prompt = `Find 4 verified upcoming ${category} happening in ${city} ${timeframe}.
-Return response as a JSON array of event objects with these exact keys:
-"title", "city", "venue", "date", "price", "category", "summary".`;
-
-      document.getElementById('gemini-prompt-input').value = prompt;
+    function saveApiKey() {
+      const key = document.getElementById('user-gemini-key').value.trim();
+      if (key) {
+        localStorage.setItem('ntx_gemini_key', key);
+        showToast('Gemini API Key saved successfully!', 'success');
+      } else {
+        localStorage.removeItem('ntx_gemini_key');
+        showToast('API Key cleared.', 'info');
+      }
     }
 
-    // Event listeners to update prompt dynamically
+    // ================= GEMINI LIVE SEARCH INTEGRATION =================
+    function updateGeminiPromptPreview() {
+      const city = document.getElementById('gemini-query-city')?.value || 'North Texas';
+      const category = document.getElementById('gemini-query-category')?.value || 'events';
+      const timeframe = document.getElementById('gemini-query-timeframe')?.value || 'this weekend';
+
+      const prompt = `Find 4 verified upcoming ${category} happening in ${city} ${timeframe}.
+Return response ONLY as a JSON array of event objects with these exact keys:
+"title", "city", "venue", "date", "price", "category", "summary".`;
+
+      const promptBox = document.getElementById('gemini-prompt-input');
+      if (promptBox) promptBox.value = prompt;
+    }
+
+    // Attach listeners safely if elements exist
     ['gemini-query-city', 'gemini-query-category', 'gemini-query-timeframe'].forEach(id => {
-      document.getElementById(id).addEventListener('change', updateGeminiPromptPreview);
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', updateGeminiPromptPreview);
     });
 
     async function runGeminiLiveSearch() {
@@ -1028,20 +1065,23 @@ Return response as a JSON array of event objects with these exact keys:
       const sourcesBox = document.getElementById('gemini-sources-box');
       const sourcesList = document.getElementById('gemini-sources-list');
 
+      const apiKey = document.getElementById('user-gemini-key').value.trim() || localStorage.getItem('ntx_gemini_key') || window.GEMINI_API_KEY;
+
+      if (!apiKey) {
+        showToast('Please enter a Google Gemini API Key above to run live web queries.', 'error');
+        document.getElementById('user-gemini-key').focus();
+        return;
+      }
+
       btn.disabled = true;
       loader.classList.remove('hidden');
 
       try {
-        // Calling Gemini API with search grounding enabled
-        const apiKey = ""; // Canvas handles auto-injection
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
         const payload = {
           contents: [{ parts: [{ text: promptText }] }],
-          tools: [{ "google_search": {} }],
-          systemInstruction: {
-            parts: [{ text: "You are a North Texas local event assistant. ALWAYS generate accurate grounded local events in DFW." }]
-          }
+          tools: [{ "google_search": {} }]
         };
 
         const res = await fetch(apiUrl, {
@@ -1050,13 +1090,17 @@ Return response as a JSON array of event objects with these exact keys:
           body: JSON.stringify(payload)
         });
 
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error?.message || `HTTP error ${res.status}`);
+        }
+
         const result = await res.json();
         const candidate = result.candidates?.[0];
 
         if (candidate && candidate.content?.parts?.[0]?.text) {
           const text = candidate.content.parts[0].text;
           
-          // Parse ground sources if present
           let sources = [];
           const groundingMetadata = candidate.groundingMetadata;
           if (groundingMetadata && groundingMetadata.groundingAttributions) {
@@ -1065,10 +1109,10 @@ Return response as a JSON array of event objects with these exact keys:
               .filter(s => s.uri && s.title);
           }
 
-          // Try parsing JSON or construct fallback cards
           let parsedEvents = [];
           try {
-            const jsonMatch = text.match(/\[[\s\S]*\]/);
+            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const jsonMatch = cleanText.match(/\[[\s\S]*\]/);
             if (jsonMatch) {
               parsedEvents = JSON.parse(jsonMatch[0]);
             }
@@ -1076,20 +1120,18 @@ Return response as a JSON array of event objects with these exact keys:
             console.warn('JSON parse fallback for Gemini response');
           }
 
-          if (parsedEvents.length === 0) {
-            // Creative fallback card if text was markdown
+          if (!parsedEvents || parsedEvents.length === 0) {
             parsedEvents = [{
               title: 'Gemini Discovered NTX Regional Event',
-              city: document.getElementById('gemini-query-city').value.split(',')[0],
-              venue: 'Local Metroplex Venue',
-              date: 'Upcoming Weekend',
+              city: (document.getElementById('gemini-query-city')?.value || 'Dallas').split(',')[0],
+              venue: 'Local DFW Venue',
+              date: 'Upcoming',
               price: 'Check Venue',
               category: 'Festivals',
               summary: text.slice(0, 220) + '...'
             }];
           }
 
-          // Render Cards
           cardsGrid.innerHTML = parsedEvents.map((e, idx) => `
             <div class="glass-card p-4 rounded-xl border border-slate-800 space-y-3">
               <div class="flex justify-between items-start">
@@ -1109,10 +1151,8 @@ Return response as a JSON array of event objects with these exact keys:
             </div>
           `).join('');
 
-          // Cache parsed events temporarily
           window.lastGeminiParsed = parsedEvents;
 
-          // Render Sources
           if (sources.length > 0) {
             sourcesList.innerHTML = sources.slice(0, 4).map(s => `
               <li><a href="${s.uri}" target="_blank" class="text-brand-400 hover:underline">${s.title}</a></li>
@@ -1128,7 +1168,7 @@ Return response as a JSON array of event objects with these exact keys:
 
       } catch (err) {
         console.error('Gemini query error:', err);
-        showToast('Error querying Gemini API. Check console.', 'error');
+        showToast(`Gemini Error: ${err.message}`, 'error');
       } finally {
         btn.disabled = false;
         loader.classList.add('hidden');
@@ -1202,15 +1242,15 @@ Return response as a JSON array of event objects with these exact keys:
       const permDesc = document.getElementById('perm-desc-text');
 
       if (perm === 'granted') {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
-        text.textContent = 'Push Active';
-        pill.className = 'px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 transition-all border bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        if (text) text.textContent = 'Push Active';
+        if (pill) pill.className = 'px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 transition-all border bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
         if (permBtn) permBtn.textContent = 'Access Granted';
         if (permDesc) permDesc.textContent = 'Native desktop and mobile web alerts permitted.';
       } else {
-        dot.className = 'w-2 h-2 rounded-full bg-amber-500';
-        text.textContent = 'Notifications Off';
-        pill.className = 'px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 transition-all border bg-slate-800 border-slate-700 text-slate-300';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-500';
+        if (text) text.textContent = 'Notifications Off';
+        if (pill) pill.className = 'px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 transition-all border bg-slate-800 border-slate-700 text-slate-300';
         if (permBtn) permBtn.textContent = 'Enable Push';
       }
     }
@@ -1249,8 +1289,8 @@ Return response as a JSON array of event objects with these exact keys:
         statusPill.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Running Loop (${schedulerPreset})`;
         statusPill.className = 'px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-full flex items-center gap-1.5';
 
-        badge.classList.remove('hidden');
-        countdownBox.classList.remove('hidden');
+        if (badge) badge.classList.remove('hidden');
+        if (countdownBox) countdownBox.classList.remove('hidden');
 
         startCountdownTimer();
         showToast('Background Gemini event scheduler initiated!', 'success');
@@ -1265,8 +1305,8 @@ Return response as a JSON array of event objects with these exact keys:
         statusPill.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-500"></span> Scheduler Paused`;
         statusPill.className = 'px-3 py-1 bg-slate-900 border border-slate-800 text-slate-400 text-xs font-semibold rounded-full flex items-center gap-1.5';
 
-        badge.classList.add('hidden');
-        countdownBox.classList.add('hidden');
+        if (badge) badge.classList.add('hidden');
+        if (countdownBox) countdownBox.classList.add('hidden');
 
         showToast('Scheduled radar loop paused.', 'info');
       }
@@ -1277,7 +1317,8 @@ Return response as a JSON array of event objects with these exact keys:
       let remaining = schedulerPreset === '10s' ? 10 : (schedulerPreset === 'daily' ? 10 : 15);
 
       const updateDisplay = () => {
-        document.getElementById('countdown-timer').textContent = `${remaining}s`;
+        const el = document.getElementById('countdown-timer');
+        if (el) el.textContent = `${remaining}s`;
       };
 
       updateDisplay();
@@ -1293,7 +1334,6 @@ Return response as a JSON array of event objects with these exact keys:
     }
 
     function triggerScheduledNotification() {
-      // Pick random event matching user preferences
       const filteredEvents = eventsData.filter(e => userAlertPrefs.cities.includes(e.city));
       const targetEvt = filteredEvents[Math.floor(Math.random() * filteredEvents.length)] || eventsData[0];
 
@@ -1326,7 +1366,7 @@ Return response as a JSON array of event objects with these exact keys:
     }
 
     function sendNativeNotification(title, body) {
-      if (Notification.permission === 'granted') {
+      if ('Notification' in window && Notification.permission === 'granted') {
         try {
           new Notification(title, {
             body: body,
@@ -1348,48 +1388,57 @@ Return response as a JSON array of event objects with these exact keys:
       notificationHistory.unshift(entry);
 
       const logContainer = document.getElementById('push-log-container');
-      logContainer.innerHTML = notificationHistory.map(item => `
-        <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-xs flex justify-between items-start gap-3">
-          <div class="space-y-0.5">
-            <div class="font-bold text-white flex items-center gap-2">
-              <span>${item.title}</span>
-              <span class="px-1.5 py-0.2 text-[9px] bg-brand-500/20 text-brand-400 rounded">${item.city}</span>
+      if (logContainer) {
+        logContainer.innerHTML = notificationHistory.map(item => `
+          <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-xs flex justify-between items-start gap-3">
+            <div class="space-y-0.5">
+              <div class="font-bold text-white flex items-center gap-2">
+                <span>${item.title}</span>
+                <span class="px-1.5 py-0.2 text-[9px] bg-brand-500/20 text-brand-400 rounded">${item.city}</span>
+              </div>
+              <p class="text-slate-400 text-[11px] line-clamp-1">${item.body}</p>
             </div>
-            <p class="text-slate-400 text-[11px] line-clamp-1">${item.body}</p>
+            <span class="text-[10px] text-slate-500 font-mono whitespace-nowrap">${item.time}</span>
           </div>
-          <span class="text-[10px] text-slate-500 font-mono whitespace-nowrap">${item.time}</span>
-        </div>
-      `).join('');
+        `).join('');
+      }
     }
 
     function clearNotificationLog() {
       notificationHistory = [];
-      document.getElementById('push-log-container').innerHTML = `<p class="text-xs text-slate-500 italic">No dispatch history recorded yet.</p>`;
+      const logContainer = document.getElementById('push-log-container');
+      if (logContainer) {
+        logContainer.innerHTML = `<p class="text-xs text-slate-500 italic">No dispatch history recorded yet.</p>`;
+      }
     }
 
     // ================= CUSTOM PREFERENCES LOGIC =================
     function buildPreferenceCheckboxes() {
       const cityContainer = document.getElementById('pref-city-checkboxes');
-      cityContainer.innerHTML = CITIES.map(c => `
-        <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer">
-          <input type="checkbox" value="${c}" ${userAlertPrefs.cities.includes(c) ? 'checked' : ''} class="city-pref-check rounded border-slate-700 text-brand-500 focus:ring-brand-500">
-          <span>${c}</span>
-        </label>
-      `).join('');
+      if (cityContainer) {
+        cityContainer.innerHTML = CITIES.map(c => `
+          <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer">
+            <input type="checkbox" value="${c}" ${userAlertPrefs.cities.includes(c) ? 'checked' : ''} class="city-pref-check rounded border-slate-700 text-brand-500 focus:ring-brand-500">
+            <span>${c}</span>
+          </label>
+        `).join('');
+      }
 
       const catContainer = document.getElementById('pref-cat-checkboxes');
-      catContainer.innerHTML = CATEGORIES.filter(c => c !== 'All').map(cat => `
-        <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer">
-          <input type="checkbox" value="${cat}" ${userAlertPrefs.categories.includes(cat) ? 'checked' : ''} class="cat-pref-check rounded border-slate-700 text-brand-500 focus:ring-brand-500">
-          <span>${cat}</span>
-        </label>
-      `).join('');
+      if (catContainer) {
+        catContainer.innerHTML = CATEGORIES.filter(c => c !== 'All').map(cat => `
+          <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer">
+            <input type="checkbox" value="${cat}" ${userAlertPrefs.categories.includes(cat) ? 'checked' : ''} class="cat-pref-check rounded border-slate-700 text-brand-500 focus:ring-brand-500">
+            <span>${cat}</span>
+          </label>
+        `).join('');
+      }
     }
 
     function savePreferences() {
       const selectedCities = Array.from(document.querySelectorAll('.city-pref-check:checked')).map(cb => cb.value);
       const selectedCats = Array.from(document.querySelectorAll('.cat-pref-check:checked')).map(cb => cb.value);
-      const keywords = document.getElementById('pref-keywords').value;
+      const keywords = document.getElementById('pref-keywords')?.value || '';
 
       userAlertPrefs = {
         cities: selectedCities,
@@ -1453,7 +1502,7 @@ END:VCALENDAR`;
       const text = `Check out "${currentModalEvent.title}" in ${currentModalEvent.city}! ${currentModalEvent.summary}`;
       
       if (navigator.clipboard) {
-        document.execCommand('copy'); // iFrame clipboard fallback safeguard
+        document.execCommand('copy');
         navigator.clipboard.writeText(text);
         showToast('Event details copied to clipboard!', 'info');
       } else {
@@ -1464,6 +1513,8 @@ END:VCALENDAR`;
     // ================= UI TOAST SYSTEM =================
     function showToast(msg, type = 'info') {
       const container = document.getElementById('toast-container');
+      if (!container) return;
+
       const toast = document.createElement('div');
 
       let borderStyle = 'border-brand-500/40 bg-slate-900/90 text-slate-100';
