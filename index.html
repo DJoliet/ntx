@@ -123,13 +123,13 @@
 
         <!-- Navigation Tabs -->
         <nav class="hidden md:flex space-x-1 bg-slate-950/60 p-1.5 rounded-xl border border-slate-800">
-          <button onclick="switchTab('feed')" id="tab-btn-feed" class="tab-btn active-tab px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+          <button onclick="switchTab('feed')" id="tab-btn-feed" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 bg-brand-600 text-white shadow-md">
             <i class="fa-solid fa-compass text-xs"></i> Event Feed
           </button>
-          <button onclick="switchTab('map')" id="tab-btn-map" class="tab-btn inactive-tab px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+          <button onclick="switchTab('map')" id="tab-btn-map" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 text-slate-400 hover:text-slate-200">
             <i class="fa-solid fa-map-location-dot text-xs"></i> Map View
           </button>
-          <button onclick="switchTab('alerts')" id="tab-btn-alerts" class="tab-btn inactive-tab px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 relative">
+          <button onclick="switchTab('alerts')" id="tab-btn-alerts" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 relative text-slate-400 hover:text-slate-200">
             <i class="fa-solid fa-bell text-xs"></i> Push Hub
             <span id="active-sim-badge" class="hidden px-1.5 py-0.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full animate-pulse">ACTIVE</span>
           </button>
@@ -612,8 +612,7 @@
         }
         eventsData = await response.json();
       } catch (error) {
-        console.error('Failed to load events.json, falling back to default events:', error);
-        showToast('Could not load events.json, using offline cache.', 'error');
+        console.warn('Failed to load events.json via fetch (likely due to file:// protocol), using built-in DFW cache:', error);
         eventsData = [
           {
             id: 'ntx-101',
@@ -625,6 +624,54 @@
             price: 'Free - $15 Entry',
             category: 'Festivals',
             summary: 'One of the most authentic Bavarian Oktoberfest celebrations in North Texas! Authentic German food, Paulaner beer, polka dancing, and Dachshund dash races.',
+            hotspot: true
+          },
+          {
+            id: 'ntx-102',
+            title: 'Deep Ellum Live Music & Street Arts Crawl',
+            city: 'Dallas',
+            venue: 'Main Street & Elm St, Deep Ellum',
+            date: 'Tonight at 7:00 PM',
+            rawDate: 'TODAY',
+            price: 'Free Admission',
+            category: 'Music',
+            summary: 'Explore over 20 independent venues featuring local indie rock, blues jams, mural showcases, and pop-up food trucks in the heart of Dallas.',
+            hotspot: true
+          },
+          {
+            id: 'ntx-103',
+            title: 'Fort Worth Stockyards Championship Rodeo',
+            city: 'Fort Worth',
+            venue: 'Cowtown Coliseum, 121 E Exchange Ave',
+            date: 'Saturday at 2:00 PM',
+            rawDate: 'THIS_WEEKEND',
+            price: 'Tickets from $25',
+            category: 'Sports',
+            summary: 'Experience the historic weekly rodeo in the historic Stockyards featuring bull riding, calf roping, barrel racing, and family entertainment.',
+            hotspot: true
+          },
+          {
+            id: 'ntx-104',
+            title: 'Plano Arts & Wine Festival',
+            city: 'Plano',
+            venue: 'Historic Downtown Plano',
+            date: 'Next Saturday',
+            rawDate: 'THIS_MONTH',
+            price: '$20 Wine Tasting Pass',
+            category: 'Food & Drink',
+            summary: 'Sample Texas wines, browse hand-crafted jewelry and paintings from local artisans, and enjoy live acoustic performances on the outdoor stage.',
+            hotspot: true
+          },
+          {
+            id: 'ntx-105',
+            title: 'Denton Square Twilight Night Market',
+            city: 'Denton',
+            venue: 'Downtown Denton Courthouse Square',
+            date: 'Friday Night, 6:00 PM',
+            rawDate: 'THIS_WEEKEND',
+            price: 'Free',
+            category: 'Arts & Culture',
+            summary: 'Over 60 local makers, vintage clothiers, vinyl record vendors, and gourmet bakers surrounding the historic county courthouse.',
             hotspot: true
           }
         ];
@@ -1133,7 +1180,6 @@ END:VCALENDAR`;
       if (!container) return;
 
       const toast = document.createElement('div');
-
       let borderStyle = 'border-brand-500/40 bg-slate-900/90 text-slate-100';
       let icon = '<i class="fa-solid fa-circle-info text-brand-400"></i>';
 
@@ -1144,3 +1190,17 @@ END:VCALENDAR`;
         borderStyle = 'border-rose-500/40 bg-slate-900/90 text-slate-100';
         icon = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i>';
       }
+
+      toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border ${borderStyle} shadow-xl backdrop-blur-md text-xs font-medium animate-in fade-in slide-in-from-bottom-3 duration-200`;
+      toast.innerHTML = `${icon}<span>${msg}</span>`;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
