@@ -4,9 +4,18 @@
     "city": "Fort Worth",
     "venue": "Dickies Arena",
     "date": "2026-10-30",
-    "price": "Starts at 12 - $22",
+    "price": "Starts at $49",
+    "category": "Music",
+    "summary": "Grammy-nominated soul and R&B artist Teddy Swims performs live at Dickies Arena with Freak Freely as part of The UGLY Tour."
+  },
+  {
+    "title": "Holiday at the Arboretum",
+    "city": "Dallas",
+    "venue": "Dallas Arboretum and Botanical Garden",
+    "date": "2026-11-11 to 2027-01-03",
+    "price": "Starts at $12",
     "category": "Festivals",
-    "summary": "Beloved annual festival celebrating the final season of the 12 Days of Christmas Victorian gazebos alongside illuminated evening garden trails."
+    "summary": "Beloved annual holiday festival celebrating the final season of the 12 Days of Christmas Victorian gazebos alongside an illuminated European-style Christmas Village."
   },
   {
     "title": "Chefs For Farmers Dallas Food & Wine Festival",
@@ -27,7 +36,7 @@
     "summary": "Outdoor food and beverage festival featuring over 100 wines, spirit tastings, live chef demos, and culinary bites from area restaurants."
   },
   {
-    "title": "Iván Argote: How to Move a Monument on a Tuesday Morning",
+    "title": "Iv\u00e1n Argote: How to Move a Monument on a Tuesday Morning",
     "city": "Dallas",
     "venue": "Dallas Contemporary",
     "date": "2026-10-03 to 2027-01-31",
@@ -45,6 +54,15 @@
     "summary": "The annual live theatrical adaptation of Charles Dickens' holiday classic featuring traditional carols and immersive staging."
   },
   {
+    "title": "Texas Ballet Theater Presents: The Nutcracker",
+    "city": "Dallas",
+    "venue": "Margot and Bill Winspear Opera House",
+    "date": "2026-11-27 to 2026-12-06",
+    "price": "Starts at $35",
+    "category": "Arts & Culture",
+    "summary": "Ben Stevenson's lavish production follows Clara through a dreamlike journey into the Kingdom of Sweets with grand choreography and sets."
+  },
+  {
     "title": "Dallas Zoo Lights",
     "city": "Dallas",
     "venue": "Dallas Zoo",
@@ -58,7 +76,52 @@
     "city": "Dallas",
     "venue": "Dallas Children's Theater",
     "date": "2026-11-21 to 2026-12-20",
-    "price": "Starts at 110)",
+    "price": "Starts at $28",
+    "category": "Family",
+    "summary": "Musical stage adaptation of the classic television special featuring Santa, Bumble the Abominable Snow Monster, and custom puppetry."
+  },
+  {
+    "title": "Fort Worth Greek Festival",
+    "city": "Fort Worth",
+    "venue": "St. Demetrios Greek Orthodox Church",
+    "date": "2026-11-13 to 2026-11-15",
+    "price": "Free",
+    "category": "Festivals",
+    "summary": "Long-running annual cultural festival celebrating Greek traditions with authentic cuisine, homemade pastries, and live folk dancing."
+  },
+  {
+    "title": "Ye Live in Dallas",
+    "city": "Arlington",
+    "venue": "AT&T Stadium",
+    "date": "2026-11-07",
+    "price": "Starts at $264",
+    "category": "Music",
+    "summary": "Grammy-winning artist Ye brings his 2026 stadium tour to AT&T Stadium for a massive live performance celebrating his iconic music catalog."
+  },
+  {
+    "title": "Jonas Brothers: The Burning Up Tour All Over Again",
+    "city": "Dallas",
+    "venue": "American Airlines Center",
+    "date": "2026-11-10",
+    "price": "Starts at $50",
+    "category": "Music",
+    "summary": "Pop icons the Jonas Brothers take the stage at American Airlines Center with special guests Franklin Jonas and Deleasa."
+  },
+  {
+    "title": "Journey: Final Frontier Tour 2026",
+    "city": "Dallas",
+    "venue": "American Airlines Center",
+    "date": "2026-11-20",
+    "price": "Starts at $45",
+    "category": "Music",
+    "summary": "Legendary rock band Journey delivers an evening of enduring arena rock anthems live in concert at American Airlines Center."
+  },
+  {
+    "title": "Dallas Cowboys vs. Philadelphia Eagles",
+    "city": "Arlington",
+    "venue": "AT&T Stadium",
+    "date": "2026-11-26",
+    "price": "Starts at $67",
     "category": "Sports",
     "summary": "The Dallas Cowboys host NFC East rivals the Philadelphia Eagles in their traditional national Thanksgiving afternoon football showdown."
   },
