@@ -610,7 +610,10 @@
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        eventsData = await response.json();
+        eventsData = (await response.json()).map((event, index) => ({
+          ...event,
+          id: event.id || `event-${index + 1}`
+        }));
       } catch (error) {
         console.warn('Failed to load events.json via fetch (likely due to file:// protocol), using built-in DFW cache:', error);
         eventsData = [
@@ -764,13 +767,9 @@
               </span>
             </div>
 
-            <h3 class="font-bold text-white text-base leading-snug hover:text-brand-400 cursor-pointer transition-colors" onclick="openModal('${evt.id}')">
+            <h3 class="font-bold text-white text-base leading-snug">
               ${evt.title}
             </h3>
-
-            <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-              ${evt.summary}
-            </p>
           </div>
 
           <div class="space-y-3 pt-3 border-t border-slate-800/80">
