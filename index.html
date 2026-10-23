@@ -1135,30 +1135,110 @@
       document.getElementById('event-modal').classList.add('hidden');
     }
 
-    function downloadICS() {
+    function createICSFile(evt) {
+      const dateMatch = evt.date.match(/^(\d{4}-\d{2}-\d{2})(?:\s+to\s+(\d{4}-\d{2}-\d{2}))?$/);
+      if (!dateMatch) {
+        throw new Error('This event does not have a calendar-compatible date.');
+      }
+
+      const toIcsDate = date => {
+        const parsed = new Date(`${date}T00:00:00Z`);
+        if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
+          throw new Error('This event has an invalid date.');
+        }
+        return date.replace(/-/g, '');
+      };
+      const addOneDay = date => {
+        const parsed = new Date(`${date}T00:00:00Z`);
+        parsed.setUTCDate(parsed.getUTCDate() + 1);
+        return parsed.toISOString().slice(0, 10);
+      };
+      const escapeIcsText = text => String(text)
+        .replace(/\\/g, '\\\\')
+        .replace(/\r\n|\r|\n/g, '\\n')
+        .replace(/,/g, '\\,')
+        .replace(/;/g, '\\;');
+      const encoder = new TextEncoder();
+      const foldIcsLine = line => {
+        let folded = '';
+        let segment = '';
+        let byteLength = 0;
+        for (const character of line) {
+          const characterBytes = encoder.encode(character).length;
+          if (byteLength + characterBytes > 75) {
+            folded += `${segment}\r\n `;
+            segment = character;
+            byteLength = 1 + characterBytes;
+          } else {
+            segment += character;
+            byteLength += characterBytes;
+          }
+        }
+        return folded + segment;
+      };
+
+      const startDate = dateMatch[1];
+      const endDate = dateMatch[2] || startDate;
+      if (endDate < startDate) {
+        throw new Error('This event has an invalid date range.');
+      }
+      const icsStartDate = toIcsDate(startDate);
+      toIcsDate(endDate);
+      const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+      const icsData = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//NTX Event Radar//EN',
+        'CALSCALE:GREGORIAN',
+        'BEGIN:VEVENT',
+        `UID:${escapeIcsText(evt.id)}@ntx-event-radar`,
+        `DTSTAMP:${now}`,
+        `DTSTART;VALUE=DATE:${icsStartDate}`,
+        `DTEND;VALUE=DATE:${toIcsDate(addOneDay(endDate))}`,
+        `SUMMARY:${escapeIcsText(evt.title)}`,
+        `LOCATION:${escapeIcsText(`${evt.venue}, ${evt.city}, TX`)}`,
+        `DESCRIPTION:${escapeIcsText(evt.summary)}`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].map(foldIcsLine).join('\r\n');
+
+      return new File([icsData], `${evt.title.replace(/[<>:"/\\|?*\u0000-\u001F]/g, '').trim().replace(/\s+/g, '_') || 'event'}.ics`, {
+        type: 'text/calendar;charset=utf-8'
+      });
+    }
+
+    async function downloadICS() {
       if (!currentModalEvent) return;
-      const evt = currentModalEvent;
+      try {
+        const evt = currentModalEvent;
+        const file = createICSFile(evt);
+        if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+          await navigator.share({ files: [file], title: evt.title });
+          showToast('Choose Calendar or save the .ics file from the share sheet.', 'success');
+          return;
+        }
 
-      const icsData = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//NTX Event Radar//EN
-BEGIN:VEVENT
-SUMMARY:${evt.title}
-LOCATION:${evt.venue}, ${evt.city}, TX
-DESCRIPTION:${evt.summary}
-END:VEVENT
-END:VCALENDAR`;
-
-      const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${evt.title.replace(/\s+/g, '_')}.ics`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      showToast('ICS Calendar event file downloaded!', 'success');
+        const url = URL.createObjectURL(file);
+        const link = document.createElement('a');
+        link.href = url;
+        link.rel = 'noopener';
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (isIOS) {
+          link.target = '_blank';
+        } else {
+          link.download = file.name;
+        }
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+        showToast('Calendar file opened or downloaded.', 'success');
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        console.error('Failed to create or share calendar event:', error);
+        showToast(error.message || 'Could not create the calendar event.', 'error');
+      }
     }
 
     function shareEvent() {
