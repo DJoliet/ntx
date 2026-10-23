@@ -590,7 +590,9 @@
     let eventsData = [];
 
     // Notification State
-    let notificationPermission = Notification.permission || 'default';
+    let notificationPermission = typeof Notification !== 'undefined'
+      ? Notification.permission
+      : 'default';
     let schedulerActive = false;
     let schedulerPreset = '10s'; // '10s', 'daily', 'weekly'
     let schedulerInterval = null;
@@ -615,7 +617,7 @@
       updatePermissionUI();
 
       // Initial notification permission check
-      if ('Notification' in window && Notification.permission === 'granted') {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         updatePermissionStatus('granted');
       }
     };
@@ -882,7 +884,7 @@
 
     // ================= PUSH NOTIFICATION ENGINE =================
     function updatePermissionUI() {
-      if ('Notification' in window) {
+      if (typeof Notification !== 'undefined') {
         updatePermissionStatus(Notification.permission);
       } else {
         updatePermissionStatus('default');
@@ -890,7 +892,7 @@
     }
 
     async function toggleNotificationPermission() {
-      if (!('Notification' in window)) {
+      if (typeof Notification === 'undefined') {
         showToast('Browser does not support desktop notifications', 'error');
         return;
       }
@@ -1046,7 +1048,7 @@
     }
 
     function sendNativeNotification(title, body) {
-      if ('Notification' in window && Notification.permission === 'granted') {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         try {
           new Notification(title, {
             body: body,
