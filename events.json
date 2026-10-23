@@ -1,65 +1,74 @@
 [
   {
-    "title": "Ed Sheeran: LOOP Tour",
-    "city": "Arlington",
-    "venue": "AT&T Stadium",
-    "date": "2026-10-24",
-    "price": "Varies by seating (starts at ~39.50)",
-    "category": "Concert",
-    "summary": "Teddy Swims brings The UGLY Tour to Dickies Arena alongside Freak Freely."
-  },
-  {
-    "title": "Doja Cat: Tour Ma Vie World Tour",
-    "city": "Dallas",
-    "venue": "American Airlines Center",
-    "date": "2026-11-04",
-    "price": "Varies by seating",
-    "category": "Concert",
-    "summary": "Doja Cat headlines the American Airlines Center on her Tour Ma Vie World Tour, featuring special guest Latto."
-  },
-  {
-    "title": "Ye Live In Dallas",
-    "city": "Arlington",
-    "venue": "AT&T Stadium",
-    "date": "2026-11-07",
-    "price": "Varies by seating",
-    "category": "Concert",
-    "summary": "Ye performs live at AT&T Stadium as part of his 2026 nationwide stadium tour."
-  },
-  {
-    "title": "John Summit: CTRL ESCAPE Arena Tour",
+    "title": "Teddy Swims: The UGLY Tour",
     "city": "Fort Worth",
     "venue": "Dickies Arena",
+    "date": "2026-10-30",
+    "price": "Starts at 12 - $22",
+    "category": "Festivals",
+    "summary": "Beloved annual festival celebrating the final season of the 12 Days of Christmas Victorian gazebos alongside illuminated evening garden trails."
+  },
+  {
+    "title": "Chefs For Farmers Dallas Food & Wine Festival",
+    "city": "Dallas",
+    "venue": "Old City Park",
+    "date": "2026-11-07 to 2026-11-08",
+    "price": "Starts at $145",
+    "category": "Food & Drink",
+    "summary": "Culinary festival featuring tastings, wines, and craft beverages from more than 80 regional chefs paired with Texas farms."
+  },
+  {
+    "title": "Plano Food + Wine Festival",
+    "city": "Plano",
+    "venue": "Legacy West",
     "date": "2026-11-07",
-    "price": "Varies by seating (starts at ~55)",
-    "category": "Concert",
-    "summary": "The Jonas Brothers play American Airlines Center with special guests Franklin Jonas and Deleasa."
+    "price": "Starts at $45",
+    "category": "Food & Drink",
+    "summary": "Outdoor food and beverage festival featuring over 100 wines, spirit tastings, live chef demos, and culinary bites from area restaurants."
   },
   {
-    "title": "Holiday at the Arboretum",
+    "title": "Iván Argote: How to Move a Monument on a Tuesday Morning",
     "city": "Dallas",
-    "venue": "Dallas Arboretum and Botanical Garden",
-    "date": "2026-11-11 to 2027-01-03",
-    "price": "$12 - 60)",
-    "category": "Concert",
-    "summary": "Classic rock icons Journey perform at the American Airlines Center on their Final Frontier Tour."
+    "venue": "Dallas Contemporary",
+    "date": "2026-10-03 to 2027-01-31",
+    "price": "Free",
+    "category": "Arts & Culture",
+    "summary": "Solo contemporary art exhibition exploring public monuments, cultural memory, and social history through large-scale sculpture and video."
   },
   {
-    "title": "Dallas YMCA Turkey Trot",
+    "title": "Dallas Theater Center Presents: A Christmas Carol",
     "city": "Dallas",
-    "venue": "Downtown Dallas (City Hall Plaza)",
-    "date": "2026-11-26",
-    "price": "$35 - $50 registration",
-    "category": "Sports & Fitness",
-    "summary": "The 59th annual Thanksgiving morning tradition featuring a 5K and 8-mile run/walk starting at Dallas City Hall."
+    "venue": "Dee and Charles Wyly Theatre",
+    "date": "2026-11-27 to 2026-12-27",
+    "price": "Starts at $35",
+    "category": "Arts & Culture",
+    "summary": "The annual live theatrical adaptation of Charles Dickens' holiday classic featuring traditional carols and immersive staging."
+  },
+  {
+    "title": "Dallas Zoo Lights",
+    "city": "Dallas",
+    "venue": "Dallas Zoo",
+    "date": "2026-11-13 to 2027-01-03",
+    "price": "Starts at $19",
+    "category": "Family",
+    "summary": "Family-focused holiday walk-through event featuring over two million lights, oversized holiday lanterns, photo ops, and visits with Santa."
+  },
+  {
+    "title": "Rudolph the Red-Nosed Reindeer",
+    "city": "Dallas",
+    "venue": "Dallas Children's Theater",
+    "date": "2026-11-21 to 2026-12-20",
+    "price": "Starts at 110)",
+    "category": "Sports",
+    "summary": "The Dallas Cowboys host NFC East rivals the Philadelphia Eagles in their traditional national Thanksgiving afternoon football showdown."
   },
   {
     "title": "BMW Dallas Marathon Festival",
     "city": "Dallas",
     "venue": "Downtown Dallas / Kay Bailey Hutchison Convention Center",
     "date": "2026-12-11 to 2026-12-13",
-    "price": "Varies by race registration (free to spectate)",
-    "category": "Sports & Fitness",
-    "summary": "Dallas' oldest and largest running weekend featuring a marathon, half marathon, 5K, and relay races across the city."
+    "price": "Varies by event registration (Free for spectators)",
+    "category": "Sports",
+    "summary": "North Texas' premier running festival featuring a full marathon, half marathon, ultra marathon, 5K, and relay races through central Dallas."
   }
 ]
